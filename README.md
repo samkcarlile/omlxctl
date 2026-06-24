@@ -1,67 +1,113 @@
-# omlxctl
+# omlxctl ⚡
 
-A Bun-based CLI + SDK for inspecting and controlling a local [oMLX](https://github.com/ggerganov/omlx) inference server. A scriptable, agent-friendly complement to the oMLX web dashboard.
+A fast, scriptable CLI + SDK for inspecting and controlling a local [oMLX](https://github.com/mx-shift/omlx) inference server. A keyboard-driven complement to the oMLX web dashboard — built for terminals and agents alike.
 
-## How it works
+## ✨ Features
 
-oMLX's dashboard is a client-rendered SPA backed by a clean JSON API at `/admin/api/*`. This tool consumes that API directly — no HTML parsing. See [`OMLX_PAGES.md`](./OMLX_PAGES.md) for the full endpoint catalog.
+- 🔍 **Query everything** — server health, loaded models, memory pressure, active requests, throughput stats, logs
+- ⚙️ **Control the server** — restart, reload, load/unload models, clear stats and cache
+- 💬 **Chat** — one-shot prompts via `/v1/chat/completions`
+- 📡 **Live follow** — poll any SDK expression and stream changes as JSONL
+- 🤖 **Agent-friendly** — JSON output when piped, pretty output on TTY, stable exit codes
+- 🎨 **Beautiful TTY output** — colored panels, aligned tables, memory bars, relative times
+- 🔌 **Zero config** — autoloads `~/.omlx/settings.json`
 
-## Setup
+## 📦 Setup
 
 ```bash
 bun install
-bun link        # makes `omlxctl` available on your PATH
+bun link        # installs `omlxctl` on your PATH
 ```
 
-Config is autoloaded from `~/.omlx/settings.json` (`auth.api_key`, `server.host`, `server.port`). Override with env vars or `--host`/`--port` flags.
+Config is resolved in this order: CLI flags → env vars (`OMLX_BASE_URL`, `OMLX_API_KEY`) → `~/.omlx/settings.json` → defaults (`http://127.0.0.1:8000`).
 
-## Usage
+## 🚀 Usage
 
 ```bash
-omlxctl status          # server identity + memory + active requests
-omlxctl models          # list loaded/available models
-omlxctl stats           # throughput and token counters
-omlxctl logs            # tail server logs
-omlxctl restart         # restart the server
-omlxctl load <model>    # load a model
-omlxctl unload <model>  # unload a model
-omlxctl exec <code>     # one-shot SDK eval (escape hatch)
-omlxctl follow <code>   # poll + change-detect (watch mode)
+omlxctl status              # server identity, memory, active requests, throughput
+omlxctl models              # list all models (size, engine, loaded state)
+omlxctl models --loaded     # only loaded models
+omlxctl stats               # token counters and TPS (session scope)
+omlxctl stats --scope alltime
+
+omlxctl restart             # restart the server (polls until healthy)
+omlxctl load <model>        # load a model (fuzzy match, settles before returning)
+omlxctl unload <model>      # unload a model
+
+omlxctl exec '<code>'       # one-shot SDK eval — the escape hatch ⭐
+omlxctl follow '<code>'     # poll + change-detect, emit JSONL on each change ⭐
+
+omlxctl help                # full help (syntax-highlighted via bat)
+omlxctl help sdk            # SDK method reference
 ```
 
-## Architecture
+### 🔧 exec examples
+
+```bash
+omlxctl exec 'await omlx.server()'
+omlxctl exec '(await omlx.models()).filter(m => m.loaded).map(m => m.id)'
+omlxctl exec 'await omlx.chat("Qwen3.6-27B-UD-MLX-6bit", "hello")'
+omlxctl exec 'await omlx.clearStats("session")'
+```
+
+### 📡 follow examples
+
+```bash
+omlxctl follow 'await omlx.activeRequests()'          # watch live request queue
+omlxctl follow --interval 500 'await omlx.memory()'   # memory every 500ms
+omlxctl follow --count 10 'await omlx.stats()'        # stop after 10 changes
+```
+
+## 🌐 Global flags
+
+| Flag | Description |
+|---|---|
+| `--json` | Force JSON output (even on TTY) |
+| `--no-color` | Disable ANSI colors |
+| `--yes` | Skip confirmation prompts |
+| `--base-url <url>` | Override server base URL |
+| `--api-key <key>` | Override API key |
+
+## 🏗️ Architecture
 
 ```
-CLI (omlxctl)
-  └─ SDK / domain taxonomy (class Omlx)
-       └─ Low-level endpoint clients (1 fn ↔ 1 endpoint, typed)
-            └─ Transport + Auth (config · session cookie · bearer)
+CLI  (omlxctl)
+  └─ SDK / domain taxonomy  (class Omlx)
+       └─ Low-level endpoint clients  (1 fn ↔ 1 endpoint, typed)
+            └─ Transport + Auth  (config · session cookie · bearer)
+                 └─ In-process TTL cache  (collapses redundant getStats fetches)
 ```
-
-Source layout:
 
 ```
 src/
 ├─ cli.ts               # arg parsing + subcommand dispatch
 ├─ commands/            # one file per subcommand
-├─ sdk.ts               # class Omlx
+├─ sdk.ts               # class Omlx (query + action methods)
 ├─ client/
-│  ├─ config.ts         # resolve api_key / base url
+│  ├─ config.ts         # resolve api_key / base url / paths
 │  ├─ transport.ts      # auth, session cookie, request()
-│  └─ endpoints.ts      # typed endpoint functions
-├─ types/               # endpoint + domain types
-└─ render/              # TTY pretty-print vs JSON/JSONL output
+│  ├─ endpoints.ts      # typed low-level endpoint functions
+│  └─ cache.ts          # short-TTL in-process cache
+├─ types/               # api.ts + errors.ts
+└─ render/              # TTY pretty-print vs JSON/JSONL
 ```
 
-Output is pretty-printed on a TTY; plain JSON/JSONL when piped — so agents get deterministic, parseable output.
+## 🤖 Claude Code integration
 
-## Development
+`@`-include `OMLXCTL.md` in your project's `CLAUDE.md` to give Claude reliable access to oMLX status and control:
 
-See [`docs/PLAN.md`](./docs/PLAN.md) for the full design and phase breakdown. Sub-plans are in [`docs/plans/`](./docs/plans/).
+```md
+@./omlxctl/OMLXCTL.md
+```
+
+## 📋 Phases
 
 | Phase | Status |
-| --- | --- |
-| 0 — Foundation (config, auth, transport) | planned |
-| 1 — Query API (read-only SDK + subcommands) | planned |
-| 2 — Actions (restart, load/unload, clears) | planned |
-| 3 — Polish (watch/follow, TTL cache) | planned |
+|---|---|
+| 0 — Foundation (config, auth, transport) | ✅ Done |
+| 1 — Query API (read-only SDK + subcommands) | ✅ Done |
+| 2 — Actions (restart, load/unload, chat, clears) | ✅ Done |
+| 3 — Polish (watch/follow, TTL cache, beautiful TTY) | ✅ Done |
+| CC integration (OMLXCTL.md) | ✅ Done |
+
+See [`docs/PLAN.md`](./docs/PLAN.md) for design rationale and [`docs/OMLX_PAGES.md`](./docs/OMLX_PAGES.md) for the full API endpoint catalog.
