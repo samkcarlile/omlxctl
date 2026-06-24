@@ -1,9 +1,31 @@
 {
   "name": "omlxctl",
-  "module": "index.ts",
+  "version": "0.1.0",
+  "description": "A fast, scriptable CLI + SDK for inspecting and controlling a local oMLX inference server.",
   "type": "module",
-  "private": true,
+  "license": "MIT",
+  "author": "Sam Carlile",
+  "homepage": "https://github.com/samkcarlile/omlxctl#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samkcarlile/omlxctl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samkcarlile/omlxctl/issues"
+  },
+  "keywords": [
+    "omlx",
+    "mlx",
+    "cli",
+    "sdk",
+    "llm",
+    "inference",
+    "bun"
+  ],
   "bin": { "omlxctl": "src/cli.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },

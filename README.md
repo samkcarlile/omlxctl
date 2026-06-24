@@ -100,14 +100,4 @@ src/
 @./omlxctl/OMLXCTL.md
 ```
 
-## 📋 Phases
-
-| Phase | Status |
-|---|---|
-| 0 — Foundation (config, auth, transport) | ✅ Done |
-| 1 — Query API (read-only SDK + subcommands) | ✅ Done |
-| 2 — Actions (restart, load/unload, chat, clears) | ✅ Done |
-| 3 — Polish (watch/follow, TTL cache, beautiful TTY) | ✅ Done |
-| CC integration (OMLXCTL.md) | ✅ Done |
-
-See [`docs/PLAN.md`](./docs/PLAN.md) for design rationale and [`docs/OMLX_PAGES.md`](./docs/OMLX_PAGES.md) for the full API endpoint catalog.
+See [`docs/OMLX_PAGES.md`](./docs/OMLX_PAGES.md) for the full API endpoint catalog.

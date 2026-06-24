@@ -26,19 +26,19 @@ agent-friendly.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ CLI  (bin: omlxctl)   help · restart · models · stats ·      │
-│                       exec · follow                          │  ← docs/plans/cli.md
+│                       exec · follow                          │
 ├─────────────────────────────────────────────────────────────┤
 │ SDK / Taxonomy  (class Omlx)                                 │
-│   query:  server() models() memory() activeRequests()        │  ← phase-1-query.md
+│   query:  server() models() memory() activeRequests()        │
 │           stats() cache() logs() settings()                  │
-│   action: restart() reload() loadModel() unloadModel()       │  ← phase-2-actions.md
+│   action: restart() reload() loadModel() unloadModel()       │
 │           chat() clearStats() clearCache()                   │
-│   polish: watch() + TTL cache                                │  ← phase-3-polish.md
+│   polish: watch() + TTL cache                                │
 ├─────────────────────────────────────────────────────────────┤
-│ Low-level endpoint clients  (1 fn ⇄ 1 endpoint, typed)       │  ← phase-1-query.md
+│ Low-level endpoint clients  (1 fn ⇄ 1 endpoint, typed)       │
 │   getServerInfo() getStats() getModels() getLogs() …         │
 ├─────────────────────────────────────────────────────────────┤
-│ Transport + Auth                                             │  ← phase-0-foundation.md
+│ Transport + Auth                                             │
 │   config resolution · /admin/api/login session · /v1 bearer  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -48,7 +48,7 @@ agent-friendly.
 omlxctl/
 ├─ package.json            # { "bin": { "omlxctl": "src/cli.ts" } }  → bun link
 ├─ OMLX_PAGES.md
-├─ docs/                   # this plan + sub-plans
+├─ docs/                   # this plan + the endpoint catalog
 ├─ src/
 │  ├─ cli.ts               # arg parsing + subcommand dispatch
 │  ├─ commands/            # one file per subcommand
@@ -74,19 +74,19 @@ omlxctl/
 | Claude Code | `@`-includable `OMLXCTL.md` doc (no skill) |
 | Out of scope | model download, quantization (oQ), uploads, benchmarking |
 
-## Phases & sub-plans
+## Phases
 
-| Phase | Goal | Sub-plan |
+| Phase | Goal | Status |
 | --- | --- | --- |
-| **0 — Foundation** | Config resolution, auth/session, `request()` transport | [plans/phase-0-foundation.md](plans/phase-0-foundation.md) |
-| **1 — Query API** | Low-level endpoint clients + domain taxonomy SDK (read-only) | [plans/phase-1-query.md](plans/phase-1-query.md) |
-| **2 — Actions** | Control surface: restart, load/unload, chat, clears | [plans/phase-2-actions.md](plans/phase-2-actions.md) |
-| **3 — Polish** | `watch()` polling/subscribe + caching | [plans/phase-3-polish.md](plans/phase-3-polish.md) |
-| **CLI** | `omlxctl` subcommands, output discipline, help | [plans/cli.md](plans/cli.md) |
-| **CC integration** | `OMLXCTL.md` for `@`-include | [plans/cc-integration.md](plans/cc-integration.md) |
+| **0 — Foundation** | Config resolution, auth/session, `request()` transport | ✅ Done |
+| **1 — Query API** | Low-level endpoint clients + domain taxonomy SDK (read-only) | ✅ Done |
+| **2 — Actions** | Control surface: restart, load/unload, chat, clears | ✅ Done |
+| **3 — Polish** | `watch()` polling/subscribe + caching | ✅ Done |
+| **CLI** | `omlxctl` subcommands, output discipline, help | ✅ Done |
+| **CC integration** | `OMLXCTL.md` for `@`-include | ✅ Done |
 
-> CLI work is interleaved with the phases (each phase exposes new subcommands), but is documented
-> as one coherent sub-plan because output discipline and help apply across all of it.
+> CLI work is interleaved with the phases — each phase exposes new subcommands — because output
+> discipline and help apply across all of it.
 
 ## Sequencing
 
