@@ -104,9 +104,15 @@ export async function helpCommand(args: string[]): Promise<void> {
   if (process.stdout.isTTY) {
     try {
       await Bun.$`which bat`.quiet();
-      await Bun.$`echo ${content} | bat -l md --style=plain`.quiet().nothrow();
-      // If bat succeeded, we're done
-      return;
+      // Write to a temp file so bat receives a real file path (avoids shell-quoting
+      // issues with backticks/special chars in content) and can auto-detect language.
+      // --color=always is required because bat's stdout is not a TTY inside Bun.$,
+      // so without it bat silently strips all ANSI codes.
+      const tmp = `/tmp/omlxctl-help-${Date.now()}.md`;
+      await Bun.write(tmp, content);
+      const result = await Bun.$`bat --color=always --language=md --style=plain --paging=never ${tmp}`.nothrow();
+      try { await Bun.$`rm -f ${tmp}`.quiet(); } catch {}
+      if (result.exitCode === 0) return;
     } catch {
       // bat not available or failed — fall through to plain print
     }
